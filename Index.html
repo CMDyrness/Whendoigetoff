@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>When Do I Get Off?</title>
+    <style>
+        :root {
+            --primary: #4a6cf7;
+            --primary-dark: #3a4fd0;
+            --secondary: #ee5a6f;
+            --dark: #101218;
+            --light: #f5f5f7;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background: var(--dark);
+            color: var(--light);
+            min-height: 100vh;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--primary);
+        }
+
+        .input-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+            z-index: 100;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .time-input {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        input, select, button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            padding: 12px 20px;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.3);
+        }
+
+        button {
+            background: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .countdown-container {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            width: 100%;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .countdown {
+            font-size: min(20vw, 20vh);
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 1rem;
+            transition: font-size 0.5s ease;
+        }
+
+        .countdown-label {
+            font-size: min(5vw, 5vh);
+            opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+
+        .format-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .format-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .format-btn.active {
+            background: var(--primary);
+        }
+
+        .reset-btn {
+            background: var(--secondary);
+            margin-top: 1rem;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-1000px) rotate(720deg);
+            }
+        }
+
+        .timezone-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .location-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .timezone-info, .location-info {
+                position: static;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="app-container">
+        <div class="logo">whendoigetoff.com</div>
+        
+        <!-- Input Form -->
+        <div class="input-container" id="inputContainer">
+            <h1>When Do I Get Off?</h1>
+            <p>Enter the time you finish work and see the countdown</p>
+            
+            <div class="time-input">
+                <input type="time" id="endTime" placeholder="12:30 PM" required>
+                <button id="startBtn">Start Countdown</button>
+            </div>
+            
+            <p id="timezoneDisplay">Detecting your time zone...</p>
+            <p id="locationDisplay">Detecting your location...</p>
+        </div>
+        
+        <!-- Countdown Display -->
+        <div class="countdown-container" id="countdownContainer">
+            <div class="countdown" id="countdown">00:00:00</div>
+            <div class="countdown-label" id="countdownLabel">Until you get off work</div>
+            
+            <div class="format-buttons">
+                <button class="format-btn active" data-format="hms">Hours:Minutes:Seconds</button>
+                <button class="format-btn" data-format="ms">Minutes:Seconds</button>
+                <button class="format-btn" data-format="s">Seconds</button>
+            </div>
+            
+            <button class="reset-btn" id="resetBtn">Reset</button>
+        </div>
+        
+        <div class="timezone-info" id="timezoneInfo"></div>
+        <div class="location-info" id="locationInfo"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const inputContainer = document.getElementById('inputContainer');
+            const countdownContainer = document.getElementById('countdownContainer');
+            const endTimeInput = document.getElementById('endTime');
+            const startBtn = document.getElementById('startBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const countdown = document.getElementById('countdown');
+            const countdownLabel = document.getElementById('countdownLabel');
+            const formatBtns = document.querySelectorAll('.format-btn');
+            const timezoneDisplay = document.getElementById('timezoneDisplay');
+            const locationDisplay = document.getElementById('locationDisplay');
+            const timezoneInfo = document.getElementById('timezoneInfo');
+            const locationInfo = document.getElementById('locationInfo');
+            const particles = document.getElementById('particles');
+            
+            // Variables
+            let countdownInterval;
+            let endTime;
+            let format = 'hms'; // Default format: hours, minutes, seconds
+            let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            let location = '';
+            
+            // Generate particles
+            function generateParticles() {
+                for (let i = 0; i < 50; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    
+                    // Random size between 5 and 20px
+                    const size = Math.random() * 15 + 5;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    
+                    // Random position
+                    particle.style.top = `${Math.random() * 100}%`;
+                    particle.style.left = `${Math.random() * 100}%`;
+                    
+                    // Random color
+                    const hue = Math.random() * 60 + 200; // Blue to purple range
+                    particle.style.backgroundColor = `hsl(${hue}, 80%, 60%)`;
+                    
+                    // Random animation duration between 15 and 40 seconds
+                    const duration = (Math.random() * 25 + 15).toFixed(1);
+                    particle.style.animationDuration = `${duration}s`;
+                    
+                    // Random delay
+                    particle.style.animationDelay = `${Math.random() * 5}s`;
+                    
+                    particles.appendChild(particle);
+                }
+            }
+            
+            // Get the current timezone and display it
+            function detectTimezone() {
+                try {
+                    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    if (timezoneDisplay) timezoneDisplay.textContent = `Your timezone: ${timezone}`;
+                    if (timezoneInfo) timezoneInfo.textContent = `Timezone: ${timezone}`;
+                } catch (error) {
+                    console.log("Error detecting timezone:", error);
+                    if (timezoneDisplay) timezoneDisplay.textContent = "Could not detect timezone";
+                    if (timezoneInfo) timezoneInfo.textContent = "Unknown timezone";
+                }
+            }
+            
+            // Try to get approximate location from timezone
+            function approximateLocation() {
+                try {
+                    // Extract city/region from timezone
+                    const locationParts = timezone.split('/');
+                    if (locationParts.length > 1) {
+                        // Replace underscores with spaces and format
+                        location = locationParts[locationParts.length - 1].replace(/_/g, ' ');
+                        if (locationDisplay) locationDisplay.textContent = `Location: ${location}`;
+                        if (locationInfo) locationInfo.textContent = `Location: ${location}`;
+                    } else {
+                        if (locationDisplay) locationDisplay.textContent = "Location could not be determined";
+                        if (locationInfo) locationInfo.textContent = "Unknown location";
+                    }
+                } catch (error) {
+                    console.log("Error approximating location:", error);
+                    if (locationDisplay) locationDisplay.textContent = "Location could not be determined";
+                    if (locationInfo) locationInfo.textContent = "Unknown location";
+                }
+            }
+            
+            // Format time based on selection
+            function formatTime(hours, minutes, seconds) {
+                try {
+                    if (format === 'hms') {
+                        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    } else if (format === 'ms') {
+                        const totalMinutes = hours * 60 + minutes;
+                        return `${String(totalMinutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    } else if (format === 's') {
+                        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                        return `${totalSeconds}`;
+                    }
+                    // Default fallback if format is invalid
+                    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                } catch (error) {
+                    console.log("Error formatting time:", error);
+                    return "00:00:00"; // Default in case of error
+                }
+            }
+            
+            // Update countdown
+            function updateCountdown() {
+                try {
+                    if (!endTime) return;
+                    
+                    const now = new Date();
+                    const diff = endTime - now;
+                    
+                    if (diff <= 0) {
+                        // Time's up!
+                        clearInterval(countdownInterval);
+                        if (countdown) countdown.textContent = "00:00:00";
+                        if (countdownLabel) countdownLabel.textContent = "You're free!";
+                        document.body.style.background = "var(--secondary)";
+                        return;
+                    }
+                    
+                    // Calculate hours, minutes, seconds
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    
+                    // Update display
+                    if (countdown) {
+                        countdown.textContent = formatTime(hours, minutes, seconds);
+                        
+                        // Dynamic font size based on remaining time
+                        if (hours > 0) {
+                            countdown.style.fontSize = 'min(16vw, 16vh)';
+                        } else if (minutes > 0) {
+                            countdown.style.fontSize = 'min(20vw, 20vh)';
+                        } else {
+                            countdown.style.fontSize = 'min(25vw, 25vh)';
+                        }
+                    }
+                } catch (error) {
+                    console.log("Error in countdown calculation:", error);
+                    clearInterval(countdownInterval);
+                }
+            }
+            
+            // Start countdown
+            function startCountdown() {
+                try {
+                    if (!endTimeInput) return;
+                    
+                    const timeValue = endTimeInput.value;
+                    
+                    if (!timeValue) {
+                        alert("Please enter a valid time!");
+                        return;
+                    }
+                    
+                    // Parse the input time
+                    const [hours, minutes] = timeValue.split(':').map(Number);
+                    
+                    // Set the end time for today
+                    endTime = new Date();
+                    endTime.setHours(hours, minutes, 0, 0);
+                    
+                    // If end time is in the past, set it for tomorrow
+                    if (endTime < new Date()) {
+                        endTime.setDate(endTime.getDate() + 1);
+                    }
+                    
+                    // Make sure we clear any existing interval first
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                    }
+                    
+                    // Start the countdown interval
+                    updateCountdown();
+                    countdownInterval = setInterval(updateCountdown, 1000);
+                    
+                    // Switch view
+                    if (inputContainer && countdownContainer) {
+                        inputContainer.style.display = 'none';
+                        countdownContainer.style.display = 'flex';
+                    }
+                    
+                    // Update label
+                    if (countdownLabel) {
+                        const formattedTime = endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        countdownLabel.textContent = `Until you get off work at ${formattedTime}`;
+                    }
+                } catch (error) {
+                    console.log("Error starting countdown:", error);
+                    alert("There was an error starting the countdown. Please try again.");
+                }
+            }
+            
+            // Reset to input screen
+            function resetCountdown() {
+                clearInterval(countdownInterval);
+                if (inputContainer && countdownContainer) {
+                    inputContainer.style.display = 'block';
+                    countdownContainer.style.display = 'none';
+                }
+                document.body.style.background = 'var(--dark)';
+            }
+            
+            // Change display format
+            function changeFormat(e) {
+                if (!formatBtns) return;
+                
+                formatBtns.forEach(btn => {
+                    if (btn) btn.classList.remove('active');
+                });
+                
+                e.target.classList.add('active');
+                format = e.target.dataset.format;
+                updateCountdown();
+            }
+            
+            // Set up event listeners
+            if (startBtn) {
+                startBtn.addEventListener('click', startCountdown);
+            }
+            
+            if (resetBtn) {
+                resetBtn.addEventListener('click', resetCountdown);
+            }
+            
+            if (formatBtns) {
+                formatBtns.forEach(btn => {
+                    if (btn) {
+                        btn.addEventListener('click', changeFormat);
+                    }
+                });
+            }
+            
+            // Window resize handler - ensure countdown text fits screen
+            window.addEventListener('resize', function() {
+                if (countdownContainer && countdown && 
+                    countdownContainer.style.display === 'flex') {
+                    updateCountdown();
+                }
+            });
+            
+            // Initialize
+            generateParticles();
+            detectTimezone();
+            approximateLocation();
+            
+            // Set default time to current time + 1 hour
+            if (endTimeInput) {
+                const now = new Date();
+                now.setHours(now.getHours() + 1);
+                const defaultHour = String(now.getHours()).padStart(2, '0');
+                const defaultMinutes = String(now.getMinutes()).padStart(2, '0');
+                endTimeInput.value = `${defaultHour}:${defaultMinutes}`;
+            }
+        });
+    </script>
+</body>
+</html>
